@@ -92,7 +92,7 @@ select.sel{padding:4px 8px;border:1px solid var(--borde);border-radius:7px;backg
 .lienzo canvas.arrastre{cursor:ew-resize}
 .rotulo{position:absolute;left:8px;top:6px;background:rgba(255,255,255,.92);border:1px solid var(--borde);border-radius:6px;padding:3px 8px;font-size:12px;pointer-events:none;color:var(--texto-2)}
 .rotulo b{color:var(--verde)}
-.titulo-f{position:absolute;right:8px;top:6px;background:rgba(255,255,255,.92);border:1px solid var(--borde);border-radius:6px;padding:3px 9px;font-size:13.5px;max-width:62%;overflow:hidden;pointer-events:none}
+.titulo-f{position:absolute;right:8px;bottom:30px;background:rgba(255,255,255,.92);border:1px solid var(--borde);border-radius:6px;padding:3px 9px;font-size:13.5px;max-width:62%;overflow:hidden;pointer-events:none}
 .deslizador{display:flex;align-items:center;gap:10px;padding:8px 12px;border-top:1px solid var(--borde);font-size:13.5px;flex-wrap:wrap}
 .deslizador input[type=range]{flex:1;min-width:160px;accent-color:var(--verde)}
 .deslizador input[type=number]{width:100px;padding:4px 6px;border:1px solid var(--borde);border-radius:6px}
@@ -875,7 +875,7 @@ OPT.push({
   candidatos: [{ x: 15, tipo: 'crit', tex: 'V(15)=72\\,000' }, { x: 175 / 3, tipo: 'fuera', tex: 'x=\\tfrac{175}{3}\\approx58.3\\notin[0,35]' }, { x: 0, tipo: 'ext', tex: 'V(0)=0' }, { x: 35, tipo: 'ext', tex: 'V(35)=0' }],
   respuesta: 'Máximo \\(V=72\\,000\\) cm³ \\(=72\\) L cuando \\(x=15\\) cm: caja de \\(40\\times120\\times15\\) cm.',
   figura(g, x) {
-    g.setWorld(-10, 160, -22, 80, true, { l: 8, r: 8, t: 8, b: 8 });
+    g.setWorld(-34, 160, -22, 80, true, { l: 8, r: 8, t: 8, b: 8 });
     g.rect(0, 0, 150, 70, { color: '#6b7280', fill: '#fbf0d9', ancho: 1.5 });
     [[0, 0], [150 - x, 0], [0, 70 - x], [150 - x, 70 - x]].forEach(p => g.rect(p[0], p[1], x, x, { color: '#b8321f', fill: 'rgba(184,50,31,.25)', ancho: 1 }));
     g.rect(x, x, 150 - 2 * x, 70 - 2 * x, { color: '#006747', fill: 'rgba(0,103,71,.18)', ancho: 2 });
@@ -2229,7 +2229,7 @@ const ModRC = {
     const gE = this.gE; gE.clear('#fff'); ej.escena(gE, st);
     const dibujarSerie = (g, vals, rango, actual, etiqueta, color, pedidoVal) => {
       g.clear('#fff'); g.margen = { l: 52, r: 14, t: 12, b: 26 }; g.setWorld(tm.min, tm.max, rango[0], rango[1]);
-      g.ejes({ xlabel: 't (' + tm.unidad + ')', ylabel: etiqueta, divs: 6, divsY: 5 });
+      g.ejes({ xlabel: 't (' + tm.unidad + ')', divs: 6, divsY: 5 });
       // instante pedido
       g.linea(tm.pedido, rango[0], tm.pedido, rango[1], { color: '#b7791f', dash: [5, 4], ancho: 1.2 });
       if (tm.pedido2 !== undefined) g.linea(tm.pedido2, rango[0], tm.pedido2, rango[1], { color: '#b7791f', dash: [2, 4], ancho: 1.2 });
@@ -2255,19 +2255,21 @@ const ModRC = {
 };
 
 /* ==================== MÓDULO OPTIMIZACIÓN ==================== */
+const vn = ej => ej.v === '\\theta' ? 'θ' : ej.v.replace(/\\/g, '');
+const qn = ej => ej.Q === '\\theta' ? 'θ' : ej.Q.replace(/\\/g, '');
 const ModOPT = {
   ej: null, x: 0, verF2: false, verCand: false,
   montar(ej) {
     this.ej = ej; const v = ej.vista; this.x = (v.x[0] + v.x[1]) / 2; this.verCand = false;
     UI.barra.innerHTML = `<div class="bloque"><span class="et">Problema</span><b>${ej.num}</b> ${ej.titulo}</div>
-      <div class="bloque"><label class="chk fpp"><input type="checkbox" id="opt-f2"> ver ${ej.Q}″</label><label class="chk"><input type="checkbox" id="opt-cand"> marcar candidatos</label>${ej.entero ? '<span class="pill">variable entera</span>' : ''}</div>`;
+      <div class="bloque"><label class="chk fpp"><input type="checkbox" id="opt-f2"> ver ${qn(ej)}″</label><label class="chk"><input type="checkbox" id="opt-cand"> marcar candidatos</label>${ej.entero ? '<span class="pill">variable entera</span>' : ''}</div>`;
     const conFig = !ej.sinFigura;
     UI.lienzo.className = 'lienzo'; UI.lienzo.style.gridTemplateColumns = conFig ? '1fr 1fr' : '1fr'; UI.lienzo.style.gridTemplateRows = '1fr 1fr';
-    UI.lienzo.innerHTML = (conFig ? `<div class="cuadro" style="grid-row:1/-1"><canvas id="cv-fig"></canvas><div class="rotulo">Configuración para el valor actual de <b>${ej.v}</b></div></div>` : '') +
-      `<div class="cuadro"><canvas id="cv-f" class="arrastre"></canvas><div class="rotulo">Función objetivo <b>${ej.Q}(${ej.v})</b> en su dominio</div></div>
-       <div class="cuadro"><canvas id="cv-f1" class="arrastre"></canvas><div class="rotulo">Derivada <b>${ej.Q}′(${ej.v})</b> <span id="opt-rot2"></span></div></div>`;
+    UI.lienzo.innerHTML = (conFig ? `<div class="cuadro" style="grid-row:1/-1"><canvas id="cv-fig"></canvas><div class="rotulo">Configuración para el valor actual de <b>${vn(ej)}</b></div></div>` : '') +
+      `<div class="cuadro"><canvas id="cv-f" class="arrastre"></canvas><div class="rotulo">Función objetivo <b>${qn(ej)}(${vn(ej)})</b> en su dominio</div></div>
+       <div class="cuadro"><canvas id="cv-f1" class="arrastre"></canvas><div class="rotulo">Derivada <b>${qn(ej)}′(${vn(ej)})</b> <span id="opt-rot2"></span></div></div>`;
     const paso = (v.x[1] - v.x[0]) / 400;
-    UI.desl.innerHTML = `<span class="et">${ej.v.replace(/\\/g, '')}</span><input type="range" id="opt-x" min="${v.x[0]}" max="${v.x[1]}" step="${ej.entero ? 1 : paso}" value="${this.x}"><input type="number" id="opt-xn" step="${ej.entero ? 1 : paso}" value="${fmt(this.x, 3).replace('−', '-')}"><span>${ej.unidad || ''}</span>`;
+    UI.desl.innerHTML = `<span class="et">${vn(ej)}</span><input type="range" id="opt-x" min="${v.x[0]}" max="${v.x[1]}" step="${ej.entero ? 1 : paso}" value="${this.x}"><input type="number" id="opt-xn" step="${ej.entero ? 1 : paso}" value="${fmt(this.x, 3).replace('−', '-')}"><span>${ej.unidad || ''}</span>`;
     this.gF = conFig ? nuevoLienzo('cv-fig') : null; this.gQ = nuevoLienzo('cv-f'); this.gD = nuevoLienzo('cv-f1');
     // muestras
     const N = 600; this.xs = []; this.fs = []; this.f1s = []; this.f2s = [];
@@ -2292,33 +2294,33 @@ const ModOPT = {
       if (dom.abA) g.texto('abierto en ' + fmt(dom.a), dom.a, g.world.y1, { tam: 11, color: '#6b7280', align: 'left', dx: 4, dy: 10 }); if (dom.abB && Number.isFinite(dom.b)) g.texto('abierto en ' + fmt(dom.b), dom.b, g.world.y1, { tam: 11, color: '#6b7280', align: 'right', dx: -4, dy: 10 }); if (!Number.isFinite(dom.b)) g.texto('→ ∞', g.world.x1, g.world.y1, { tam: 11, color: '#6b7280', align: 'right', dx: -4, dy: 10 });
     };
     // Q
-    const gQ = this.gQ; gQ.clear('#fff'); gQ.margen = { l: 52, r: 14, t: 12, b: 26 }; gQ.setWorld(v.x[0], v.x[1], this.rF[0], this.rF[1]); gQ.ejes({ xlabel: ej.v.replace(/\\/g, ''), ylabel: ej.Q.replace(/\\/g, ''), xtex: xpi, divs: 6, divsY: 5 }); sombra(gQ);
+    const gQ = this.gQ; gQ.clear('#fff'); gQ.margen = { l: 52, r: 14, t: 12, b: 26 }; gQ.setWorld(v.x[0], v.x[1], this.rF[0], this.rF[1]); gQ.ejes({ xlabel: vn(ej), ylabel: qn(ej), xtex: xpi, divs: 6, divsY: 5 }); sombra(gQ);
     gQ.curva(ej.f, v.x[0], v.x[1], { color: '#006747', ancho: 2.4 });
     if (this.verCand) ej.candidatos.forEach(c => { if (!Number.isFinite(c.x)) return; const y = ej.f(c.x); if (!Number.isFinite(y)) return; const col = c.tipo === 'crit' ? '#b8321f' : c.tipo === 'fuera' ? '#9ca3af' : '#1f5fa8'; if (c.x >= v.x[0] && c.x <= v.x[1]) { gQ.punto(c.x, clamp(y, gQ.world.y0, gQ.world.y1), { color: col, fill: col, r: 5 }); gQ.texto(c.tipo === 'crit' ? 'crítico' : c.tipo === 'ext' ? 'extremo del intervalo' : c.tipo === 'fuera' ? 'crítico fuera del dominio' : 'límite', c.x, clamp(y, gQ.world.y0, gQ.world.y1), { color: col, tam: 11, dy: 14, fondo: 'rgba(255,255,255,.85)' }); } });
     marcar(gQ, ej.f, '#006747');
     // Q' (y Q'')
-    const gD = this.gD; gD.clear('#fff'); gD.margen = { l: 52, r: 14, t: 12, b: 26 }; gD.setWorld(v.x[0], v.x[1], this.rD[0], this.rD[1]); gD.ejes({ xlabel: ej.v.replace(/\\/g, ''), ylabel: ej.Q.replace(/\\/g, '') + '′' + (this.verF2 ? ', ' + ej.Q.replace(/\\/g, '') + '″' : ''), xtex: xpi, divs: 6, divsY: 5 }); sombra(gD);
+    const gD = this.gD; gD.clear('#fff'); gD.margen = { l: 52, r: 14, t: 12, b: 26 }; gD.setWorld(v.x[0], v.x[1], this.rD[0], this.rD[1]); gD.ejes({ xlabel: vn(ej), ylabel: qn(ej) + '′' + (this.verF2 ? ', ' + qn(ej) + '″' : ''), xtex: xpi, divs: 6, divsY: 5 }); sombra(gD);
     // zonas de signo de Q'
     const c = gD.ctx; c.save(); for (let i = 0; i < this.xs.length - 1; i++) { const s = this.f1s[i]; if (!Number.isFinite(s)) continue; c.fillStyle = s > 0 ? 'rgba(0,103,71,.07)' : 'rgba(184,50,31,.07)'; c.fillRect(gD.X(this.xs[i]), gD.margen.t, gD.X(this.xs[i + 1]) - gD.X(this.xs[i]) + 0.5, gD.H - gD.margen.t - gD.margen.b); } c.restore();
     gD.curva(ej.f1, v.x[0], v.x[1], { color: '#1f5fa8', ancho: 2.2 });
     if (this.verF2) gD.curva(ej.f2, v.x[0], v.x[1], { color: '#b8321f', ancho: 1.8, dash: [6, 4] });
     marcar(gD, ej.f1, '#1f5fa8'); if (this.verF2) marcar(gD, ej.f2, '#b8321f');
-    $('#opt-rot2').innerHTML = this.verF2 ? 'y <b style="color:var(--rojo)">' + ej.Q + '″</b> (punteada)' : '';
+    $('#opt-rot2').innerHTML = this.verF2 ? 'y <b style="color:var(--rojo)">' + qn(ej) + '″</b> (punteada)' : '';
   },
   explorar() {
     const ej = this.ej, x = this.x, f = ej.f(x), f1 = ej.f1(x), f2 = ej.f2(x); const dom = ej.dom;
     let h = enunciadoHTML(ej);
-    h += `<div class="form"><div class="linea"><b>${ej.Q}</b><span>\\(${ej.Qtex}\\)</span></div><div class="linea"><b>${ej.Q}′</b><span>\\(${ej.dQtex}\\)</span></div></div>`;
-    const vtxt = ej.v.replace(/\\/g, '');
-    h += '<div class="valores tres">' + valorHTML(vtxt, fmt(x, 4), ej.unidad) + valorHTML(ej.Q + '(' + vtxt + ')', fmt(f, 5), ej.Qunidad) + valorHTML(ej.Q + '′(' + vtxt + ')', fmt(f1, 5), '', signoClase(f1, 1e-6)) + '</div>';
+    h += `<div class="form"><div class="linea"><b>${qn(ej)}</b><span>\\(${ej.Qtex}\\)</span></div><div class="linea"><b>${qn(ej)}′</b><span>\\(${ej.dQtex}\\)</span></div></div>`;
+    const vtxt = vn(ej);
+    h += '<div class="valores tres">' + valorHTML(vtxt, fmt(x, 4), ej.unidad) + valorHTML(qn(ej) + '(' + vtxt + ')', fmt(f, 5), ej.Qunidad) + valorHTML(qn(ej) + '′(' + vtxt + ')', fmt(f1, 5), '', signoClase(f1, 1e-6)) + '</div>';
     const enDom = x >= dom.a - 1e-9 && x <= (Number.isFinite(dom.b) ? dom.b + 1e-9 : Infinity) && !(dom.abA && Math.abs(x - dom.a) < 1e-9);
     if (!enDom) h += `<div class="interp rojo">⚠ Este valor de ${vtxt} está <b>fuera del dominio</b> del problema (${this.domTex()}): la fórmula se puede evaluar, pero no corresponde a ninguna configuración real.</div>`;
     else {
       const casiCrit = Math.abs(f1) < 0.02 * Math.max(1, Math.abs(f1 - 0) + Math.max(...this.f1s.filter(Number.isFinite).map(Math.abs)) / 50);
-      let s = f1 > 1e-6 ? `<span class="glifo">↗</span>${ej.Q}′ > 0: <b>${ej.Q} crece</b> al aumentar ${vtxt}.` : f1 < -1e-6 ? `<span class="glifo">↘</span>${ej.Q}′ < 0: <b>${ej.Q} decrece</b> al aumentar ${vtxt}.` : `<span class="glifo">→</span>${ej.Q}′ ≈ 0: <b>número crítico</b> (candidato a extremo).`;
+      const Qn = qn(ej); let s = f1 > 1e-6 ? `<span class="glifo">↗</span>${Qn}′ > 0: <b>${Qn} crece</b> al aumentar ${vtxt}.` : f1 < -1e-6 ? `<span class="glifo">↘</span>${Qn}′ < 0: <b>${Qn} decrece</b> al aumentar ${vtxt}.` : `<span class="glifo">→</span>${Qn}′ ≈ 0: <b>número crítico</b> (candidato a extremo).`;
       h += `<div class="interp ${f1 > 1e-6 ? '' : f1 < -1e-6 ? 'rojo' : 'ocre'}">${s}</div>`;
-      if (casiCrit) h += `<div class="interp ocre">Está cerca de un número crítico. Para saber si es máximo o mínimo mire el <b>cambio de signo</b> de ${ej.Q}′ a cada lado (criterio de la primera derivada) o el signo de ${ej.Q}″ = ${fmt(f2, 4)} (${f2 < 0 ? 'cóncava hacia abajo → máximo local' : f2 > 0 ? 'cóncava hacia arriba → mínimo local' : 'no concluye'}).</div>`;
-      h += `<div class="interp azul">${ej.Q}″(${vtxt}) = ${fmt(f2, 5)}: la gráfica de ${ej.Q} es ${f2 > 1e-9 ? 'cóncava hacia arriba' : f2 < -1e-9 ? 'cóncava hacia abajo' : 'localmente recta'} aquí.</div>`;
+      if (casiCrit) h += `<div class="interp ocre">Está cerca de un número crítico. Para saber si es máximo o mínimo mire el <b>cambio de signo</b> de ${Qn}′ a cada lado (criterio de la primera derivada) o el signo de ${Qn}″ = ${fmt(f2, 4)} (${f2 < 0 ? 'cóncava hacia abajo → máximo local' : f2 > 0 ? 'cóncava hacia arriba → mínimo local' : 'no concluye'}).</div>`;
+      h += `<div class="interp azul">${Qn}″(${vtxt}) = ${fmt(f2, 5)}: la gráfica de ${Qn} es ${f2 > 1e-9 ? 'cóncava hacia arriba' : f2 < -1e-9 ? 'cóncava hacia abajo' : 'localmente recta'} aquí.</div>`;
     }
     h += `<div class="caja"><h4>Dominio y extremos del intervalo</h4><p style="margin:0;font-size:14px">Dominio: ${this.domTex()}. ${dom.abA || dom.abB || !Number.isFinite(dom.b) ? 'Intervalo <b>abierto o infinito</b>: no basta evaluar en los extremos; hay que comparar con los <em>límites</em>.' : 'Intervalo <b>cerrado</b>: el máximo y el mínimo absolutos existen (Weierstrass) y están en un crítico, un singular o un extremo del intervalo.'}</p>
       <p style="margin:6px 0 0;font-size:13.5px" class="nota">Active «marcar candidatos» en la barra superior para ver en la gráfica los críticos y los extremos del dominio; los valores están en la pestaña Planteamiento.</p></div>`;
@@ -2413,6 +2415,7 @@ const ModAREA = {
 /* ==================== MÓDULO SÓLIDOS DE REVOLUCIÓN ==================== */
 class Vista3D {
   constructor(g) { this.g = g; this.yaw = -0.55; this.pitch = 0.32; }
+  preajustar(horiz) { this.yaw = horiz ? -0.42 : -0.6; this.pitch = horiz ? 0.28 : 0.36; }
   proj(X, Y, Z) { const ca = Math.cos(this.yaw), sa = Math.sin(this.yaw), cb = Math.cos(this.pitch), sb = Math.sin(this.pitch); const x1 = X * ca + Z * sa, z1 = -X * sa + Z * ca; const y2 = Y * cb - z1 * sb; const z2 = Y * sb + z1 * cb; return [x1, y2, z2]; }
 }
 const ModSOL = {
@@ -2421,7 +2424,7 @@ const ModSOL = {
     this.ej = ej; this.eje = ej.ejes.find(e => e.principal) || ej.ejes[0]; this.metodo = this.eje.metodo || 'arandelas';
     UI.barra.innerHTML = `<div class="bloque"><span class="et">Sólido</span><b>${ej.num}</b> ${ej.titulo}</div>
       <div class="bloque"><span class="et">Eje de giro</span><select class="sel" id="sol-eje">${ej.ejes.map(e => `<option value="${e.id}">${e.tex.replace(/\\text\{eje \}/, 'eje ').replace(/\\\s*/g, ' ').replace(/[{}()]/g, '').replace('text', '')}</option>`).join('')}</select>
-      <span class="et">Franja</span><div class="seg azul" id="sol-met"><button data-m="arandelas">⟂ al eje · discos/arandelas</button><button data-m="cascarones">∥ al eje · cascarones</button></div></div>`;
+      <span class="et">Franja</span><div class="seg azul" id="sol-met"><button data-m="arandelas">perpendicular al eje → discos / arandelas</button><button data-m="cascarones">paralela al eje → cascarones</button></div></div>`;
     UI.lienzo.className = 'lienzo dos'; UI.lienzo.innerHTML = `<div class="cuadro"><canvas id="cv-reg" class="arrastre"></canvas><div class="rotulo">Región y eje · arrastre la franja</div><div class="titulo-f" id="sol-leg"></div></div><div class="cuadro"><canvas id="cv-3d"></canvas><div class="rotulo">Sólido de revolución · arrastre para girar la vista</div></div>`;
     UI.desl.innerHTML = `<span class="et" id="sol-var">x</span><input type="range" id="sol-u"><input type="number" id="sol-un" step="0.01"><span id="sol-nota" class="nota" style="margin:0"></span>`;
     this.g = nuevoLienzo('cv-reg'); this.g3 = nuevoLienzo('cv-3d'); this.v3 = new Vista3D(this.g3);
@@ -2442,7 +2445,7 @@ const ModSOL = {
   franjaVertical() { return (this.metodo === 'arandelas') === (this.eje.tipo === 'h'); },
   V() { return this.eje.V || this.ej.V; }, H() { return this.eje.H || this.ej.H; },
   configurar() {
-    $('#sol-eje').value = this.eje.id; $$('#sol-met button').forEach(b => b.classList.toggle('act', b.dataset.m === this.metodo));
+    $('#sol-eje').value = this.eje.id; $$('#sol-met button').forEach(b => b.classList.toggle('act', b.dataset.m === this.metodo)); this.v3.preajustar(this.eje.tipo === 'h');
     const desc = this.franjaVertical() ? this.V() : this.H(); this.rango = rangoDesc(desc);
     const sl = $('#sol-u'); sl.min = this.rango[0]; sl.max = this.rango[1]; sl.step = (this.rango[1] - this.rango[0]) / 400; $('#sol-var').textContent = this.franjaVertical() ? 'x' : 'y'; this.g.cv.style.cursor = this.franjaVertical() ? 'ew-resize' : 'ns-resize';
     this.setU(this.rango[0] + (this.rango[1] - this.rango[0]) * 0.45);
@@ -2470,7 +2473,7 @@ const ModSOL = {
     const ej = this.ej, g = this.g, v = ej.vista, e = this.eje; g.clear('#fff'); g.margen = { l: 40, r: 14, t: 12, b: 26 };
     // la vista debe incluir el eje
     let x0 = v.x[0], x1 = v.x[1], y0 = v.y[0], y1 = v.y[1]; if (e.tipo === 'h') { y0 = Math.min(y0, e.k - 0.4); y1 = Math.max(y1, e.k + 0.4); } else { x0 = Math.min(x0, e.k - 0.4); x1 = Math.max(x1, e.k + 0.4); }
-    g.setWorld(x0, x1, y0, y1, true); g.ejes({ xlabel: 'x', ylabel: 'y', xtex: v.xpi, divs: 7, divsY: 6 });
+    g.setWorld(x0, x1, y0, y1, ej.curvas.some(c => c.circ)); g.ejes({ xlabel: 'x', ylabel: 'y', xtex: v.xpi, divs: 7, divsY: 6 });
     dibujarRegion(g, this.V(), this.H(), 'rgba(0,103,71,.16)'); dibujarCurvas(g, ej.curvas, { x: [g.world.x0, g.world.x1], y: [g.world.y0, g.world.y1] });
     // eje de giro
     if (e.tipo === 'h') { g.linea(g.world.x0, e.k, g.world.x1, e.k, { color: '#6b3fa0', ancho: 2.5, dash: [8, 5] }); g.texto('eje de giro', g.world.x1, e.k, { color: '#6b3fa0', tam: 11.5, align: 'right', dx: -4, dy: -10, peso: '700' }); }
@@ -2513,9 +2516,9 @@ const ModSOL = {
     poli3(regionPts, { color: '#004d35', ancho: 1.2, fill: 'rgba(0,103,71,.22)' }, true);
     // superficie exterior: paralelos y meridianos
     const circ = (u, rad, estilo) => { const qs = []; for (let j = 0; j <= 48; j++) qs.push(P(u, rad, j * 2 * PI / 48)); poli3(qs, estilo); };
-    const paso = Math.max(1, Math.floor(perfiles.length / 12));
+    const paso = Math.max(1, Math.floor(perfiles.length / 9));
     perfiles.forEach((p, i) => { if (i % paso === 0 || i === perfiles.length - 1) { circ(p.u, p.R, { color: 'rgba(0,103,71,.45)', ancho: 1 }); if (p.r > 1e-6) circ(p.u, p.r, { color: 'rgba(183,121,31,.5)', ancho: 1, dash: [3, 3] }); } });
-    for (let j = 0; j < 12; j++) { const phi = j * PI / 6; poli3(perfiles.map(p => P(p.u, p.R, phi)), { color: 'rgba(0,103,71,.35)', ancho: 1 }); if (perfiles.some(p => p.r > 1e-6)) poli3(perfiles.map(p => P(p.u, p.r, phi)), { color: 'rgba(183,121,31,.35)', ancho: 1, dash: [3, 3] }); }
+    for (let j = 0; j < 8; j++) { const phi = j * PI / 4; const sil = (j % 2 === 0); poli3(perfiles.map(p => P(p.u, p.R, phi)), { color: sil ? 'rgba(0,77,53,.7)' : 'rgba(0,103,71,.3)', ancho: sil ? 1.6 : 1 }); if (perfiles.some(p => p.r > 1e-6)) poli3(perfiles.map(p => P(p.u, p.r, phi)), { color: 'rgba(183,121,31,.35)', ancho: 1, dash: [3, 3] }); }
     // elemento
     const el = this.elemento(); if (!el) return;
     if (el.tipo === 'arandela') {
@@ -2602,7 +2605,7 @@ function renderPlanteamiento(cont, ej, mod) {
   h += `<p class="nota">Intente cada paso en papel y luego pulse «Revelar».</p>`;
   h += ej.plan.map((p, i) => `<details class="paso" ${i === 0 ? 'open' : ''}><summary>${i + 1}. ${p[0]}</summary><div class="cuerpo"><button class="btn peq" data-rev="${i}">Revelar</button><div class="sol" id="plan-sol-${i}">${p[1]}</div></div></details>`).join('');
   if (mod === 'opt') h += `<div class="caja"><h4>Candidatos y valores</h4><ul style="margin:0;padding-left:18px;font-size:14px">${ej.candidatos.map(c => `<li><span class="etq ${c.tipo === 'crit' ? 'max' : c.tipo === 'fuera' ? '' : c.tipo === 'lim' ? 'ocre' : 'min'}">${c.tipo === 'crit' ? 'crítico' : c.tipo === 'ext' ? 'extremo del intervalo' : c.tipo === 'lim' ? 'límite' : 'fuera del dominio'}</span> \\(${c.tex}\\)</li>`).join('')}</ul><p style="margin:6px 0 0;font-size:14px"><b>Respuesta:</b> ${ej.respuesta}</p></div>`;
-  if (mod === 'sol') h += `<div class="caja"><h4>Todos los ejes de este ítem</h4>${ej.ejes.map(e => `<p style="margin:4px 0;font-size:13.5px"><b>\\(${e.tex}\\)</b>: \\(V\\approx${fmt(e.valor, 5)}\\) · arandelas: \\(${e.arandelas.tex.split('=').slice(0, 2).join('=')}\\cdots\\) · cascarones: \\(${e.cascarones.tex.split('=').slice(0, 2).join('=')}\\cdots\\)</p>`).join('')}</div>`;
+  if (mod === 'sol') h += `<div class="caja"><h4>Todos los ejes de este ítem</h4>${ej.ejes.map(e => `<p style="margin:4px 0;font-size:13.5px"><b>\\(${e.tex}\\)</b> · \\(V\\approx${fmt(e.valor, 5)}\\)<br><span class="nota">Arandelas: ${e.arandelas.nota || ''} Cascarones: ${e.cascarones.nota || ''}</span></p>`).join('')}<p class="nota">Las integrales completas de cada eje y método están en la pestaña Explorar («Revelar la integral»).</p></div>`;
   cont.innerHTML = h; renderTex(cont);
   $$('[data-rev]', cont).forEach(b => b.onclick = () => $('#plan-sol-' + b.dataset.rev).classList.toggle('vis'));
 }
